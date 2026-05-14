@@ -30,10 +30,9 @@ $query = "SELECT o.*,
           FROM orders o 
           WHERE o.user_id = ? 
           ORDER BY o.created_at DESC";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$orders = $stmt->get_result();
+$stmt = $pdo->prepare($query);
+$stmt->execute([$user_id]);
+$orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $page_title = 'Pesanan Saya - Core Stone Indonesia';
 include 'includes/header.php';
@@ -235,9 +234,9 @@ include 'includes/header.php';
 <div class="orders-container">
     <h1 class="page-title">📦 Pesanan Saya</h1>
     
-    <?php if ($orders->num_rows > 0): ?>
+    <?php if (count($orders) > 0): ?>
         <div class="orders-grid">
-            <?php while($order = $orders->fetch_assoc()): ?>
+            <?php foreach($orders as $order): ?>
                 <div class="order-card">
                     <div class="order-header">
                         <div>
@@ -256,24 +255,22 @@ include 'includes/header.php';
                             $items_query = "SELECT oi.*, p.image FROM order_items oi 
                                            LEFT JOIN products p ON oi.product_id = p.id 
                                            WHERE oi.order_id = ? LIMIT 3";
-                            $items_stmt = $conn->prepare($items_query);
-                            $items_stmt->bind_param("i", $order['id']);
-                            $items_stmt->execute();
-                            $items = $items_stmt->get_result();
+                            $items_stmt = $pdo->prepare($items_query);
+                            $items_stmt->execute([$order['id']]);
+                            $items = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
                             
-                            while($item = $items->fetch_assoc()):
+                            foreach($items as $item):
                             ?>
                                 <img src="<?php echo htmlspecialchars($item['image'] ?? 'assets/images/default-product.png'); ?>" 
                                      alt="Product" class="item-preview">
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                             
                             <?php
                             // Hitung sisa item
                             $total_items_query = "SELECT COUNT(*) as count FROM order_items WHERE order_id = ?";
-                            $total_stmt = $conn->prepare($total_items_query);
-                            $total_stmt->bind_param("i", $order['id']);
-                            $total_stmt->execute();
-                            $total_items = $total_stmt->get_result()->fetch_assoc()['count'];
+                            $total_stmt = $pdo->prepare($total_items_query);
+                            $total_stmt->execute([$order['id']]);
+                            $total_items = $total_stmt->fetchColumn();
                             
                             if ($total_items > 3):
                             ?>
@@ -294,7 +291,7 @@ include 'includes/header.php';
                         <?php endif; ?>
                     </div>
                 </div>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
         </div>
     <?php else: ?>
         <div class="no-orders">

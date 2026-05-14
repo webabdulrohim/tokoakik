@@ -21,7 +21,7 @@
         }
         
         .navbar {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, #800020, #a91b3a);
             padding: 15px 0;
             position: fixed;
             width: 100%;
@@ -116,7 +116,7 @@
                 top: 100%;
                 left: 0;
                 width: 100%;
-                background: linear-gradient(135deg, #10b981, #059669);
+                background: linear-gradient(135deg, #800020, #a91b3a);
                 flex-direction: column;
                 padding: 20px;
                 gap: 15px;
@@ -135,7 +135,7 @@
             position: fixed;
             bottom: 30px;
             right: 30px;
-            background: #25D366;
+            background: linear-gradient(135deg, #800020, #a91b3a);
             color: white;
             width: 60px;
             height: 60px;
@@ -144,7 +144,7 @@
             align-items: center;
             justify-content: center;
             font-size: 2rem;
-            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+            box-shadow: 0 4px 15px rgba(128, 0, 32, 0.4);
             z-index: 999;
             transition: transform 0.3s, box-shadow 0.3s;
             text-decoration: none;
@@ -152,7 +152,7 @@
         
         .whatsapp-float:hover {
             transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.6);
+            box-shadow: 0 6px 20px rgba(128, 0, 32, 0.6);
         }
         
         .footer {
@@ -178,7 +178,7 @@
         .footer-section h3 {
             font-size: 1.3rem;
             margin-bottom: 20px;
-            color: #10b981;
+            color: #a91b3a;
         }
         
         .footer-section p,
@@ -190,7 +190,7 @@
         }
         
         .footer-section a:hover {
-            color: #10b981;
+            color: #a91b3a;
         }
         
         .footer-bottom {
@@ -227,16 +227,15 @@
                 <?php if (isset($_SESSION['user_id'])): 
                     // Ambil data user untuk menampilkan nama atau foto
                     $user_id = $_SESSION['user_id'];
-                    $stmt = $conn->prepare("SELECT name, email, profile_photo FROM users WHERE id = ?");
-                    $stmt->bind_param("i", $user_id);
-                    $stmt->execute();
-                    $user_data = $stmt->get_result()->fetch_assoc();
+                    $stmt = $pdo->prepare("SELECT name, email, profile_photo FROM users WHERE id = ?");
+                    $stmt->execute([$user_id]);
+                    $user_data = $stmt->fetch(PDO::FETCH_ASSOC);
                     
                     $avatar_url = '';
                     if (!empty($user_data['profile_photo']) && file_exists('assets/images/profiles/' . $user_data['profile_photo'])) {
                         $avatar_url = 'assets/images/profiles/' . $user_data['profile_photo'];
                     } else {
-                        $avatar_url = 'https://ui-avatars.com/api/?name=' . urlencode($user_data['name'] ?? 'User') . '&background=10b981&color=fff&size=40';
+                        $avatar_url = 'https://ui-avatars.com/api/?name=' . urlencode($user_data['name'] ?? 'User') . '&background=800020&color=fff&size=40';
                     }
                 ?>
                     <a href="my-account.php" class="nav-icon" title="Akun Saya" style="display: flex; align-items: center; gap: 8px;">
