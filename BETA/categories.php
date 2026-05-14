@@ -3,13 +3,13 @@ session_start();
 require 'config/database.php';
 
 // Ambil semua kategori
-$stmt = $conn->prepare("SELECT c.*, COUNT(p.id) as product_count 
+$stmt = $pdo->prepare("SELECT c.*, COUNT(p.id) as product_count 
                         FROM categories c 
                         LEFT JOIN products p ON c.id = p.category_id AND p.status = 'active'
                         GROUP BY c.id 
                         ORDER BY c.name ASC");
 $stmt->execute();
-$result = $stmt->get_result();
+$categories = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -82,8 +82,8 @@ $result = $stmt->get_result();
         <h1 class="page-title">Kategori Produk</h1>
         
         <div class="categories-grid">
-            <?php if ($result->num_rows > 0): ?>
-                <?php while($category = $result->fetch_assoc()): ?>
+            <?php if (count($categories) > 0): ?>
+                <?php foreach ($categories as $category): ?>
                     <a href="category.php?id=<?= $category['id'] ?>" class="category-card">
                         <div class="category-info">
                             <div class="category-name"><?= htmlspecialchars($category['name']) ?></div>
@@ -91,7 +91,7 @@ $result = $stmt->get_result();
                         </div>
                         <i class="fas fa-chevron-right" style="color: #9ca3af; font-size: 0.9rem;"></i>
                     </a>
-                <?php endwhile; ?>
+                <?php endforeach; ?>
             <?php else: ?>
                 <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #6b7280;">
                     <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>

@@ -35,10 +35,9 @@ $query = "SELECT o.*,
           END as color
           FROM orders o 
           WHERE o.id = ? AND o.user_id = ?";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("ii", $order_id, $user_id);
-$stmt->execute();
-$order = $stmt->get_result()->fetch_assoc();
+$stmt = $pdo->prepare($query);
+$stmt->execute([$order_id, $user_id]);
+$order = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$order) {
     header('Location: my-orders.php');
@@ -50,10 +49,9 @@ $items_query = "SELECT oi.*, p.name, p.image, p.price
                 FROM order_items oi 
                 LEFT JOIN products p ON oi.product_id = p.id 
                 WHERE oi.order_id = ?";
-$items_stmt = $conn->prepare($items_query);
-$items_stmt->bind_param("i", $order_id);
-$items_stmt->execute();
-$items = $items_stmt->get_result();
+$items_stmt = $pdo->prepare($items_query);
+$items_stmt->execute([$order_id]);
+$items = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $page_title = 'Detail Pesanan - Core Stone Indonesia';
 include 'includes/header.php';
@@ -310,7 +308,7 @@ include 'includes/header.php';
             </thead>
             <tbody>
                 <?php 
-                while($item = $items->fetch_assoc()): 
+                foreach($items as $item): 
                     $subtotal = $item['price'] * $item['quantity'];
                 ?>
                     <tr>
@@ -325,7 +323,7 @@ include 'includes/header.php';
                         <td><?php echo $item['quantity']; ?></td>
                         <td>Rp <?php echo number_format($subtotal, 0, ',', '.'); ?></td>
                     </tr>
-                <?php endwhile; ?>
+                <?php endforeach; ?>
             </tbody>
         </table>
         

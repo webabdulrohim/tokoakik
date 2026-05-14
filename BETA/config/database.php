@@ -9,15 +9,14 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'core_stone_db');
 
-// Create database connection using MySQLi
-$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+// Create database connection using PDO
+try {
+    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
 }
-
-// Set charset to utf8mb4
-$conn->set_charset("utf8mb4");
 
 // Helper Functions
 function redirect($url) {
@@ -38,7 +37,6 @@ function formatRupiah($amount) {
 }
 
 function sanitizeInput($data) {
-    global $conn;
-    return $conn->real_escape_string(htmlspecialchars(strip_tags(trim($data))));
+    return htmlspecialchars(strip_tags(trim($data)));
 }
 ?>

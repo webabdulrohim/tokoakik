@@ -13,11 +13,9 @@ $success_msg = '';
 $error_msg = '';
 
 // Ambil data user
-$stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
+$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+$stmt->execute([$user_id]);
+$user = $stmt->fetch();
 
 if (!$user) {
     session_destroy();
@@ -57,20 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
         }
     }
 
-    $stmt = $conn->prepare("UPDATE users SET name = ?, email = ?, phone = ?, address = ?, photo = ? WHERE id = ?");
-    $stmt->bind_param("sssssi", $name, $email, $phone, $address, $photo_path, $user_id);
+    $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, phone = ?, address = ?, photo = ? WHERE id = ?");
+    $stmt->execute([$name, $email, $phone, $address, $photo_path, $user_id]);
     
-    if ($stmt->execute()) {
-        $success_msg = "Profil berhasil diperbarui!";
-        // Refresh data user
-        $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $user = $result->fetch_assoc();
-    } else {
-        $error_msg = "Gagal memperbarui profil.";
-    }
+    $success_msg = "Profil berhasil diperbarui!";
+    // Refresh data user
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch();
 }
 
 // Handle Ganti Password
@@ -82,14 +74,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['change_password'])) {
     if (password_verify($current_pass, $user['password'])) {
         if ($new_pass === $confirm_pass) {
             $hashed_pass = password_hash($new_pass, PASSWORD_DEFAULT);
-            $stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
-            $stmt->bind_param("si", $hashed_pass, $user_id);
+            $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+            $stmt->execute([$hashed_pass, $user_id]);
             
-            if ($stmt->execute()) {
-                $success_msg = "Password berhasil diubah!";
-            } else {
-                $error_msg = "Gagal mengubah password.";
-            }
+            $success_msg = "Password berhasil diubah!";
         } else {
             $error_msg = "Konfirmasi password tidak cocok.";
         }
@@ -99,10 +87,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['change_password'])) {
 }
 
 // Ambil Riwayat Pesanan
-$orders_stmt = $conn->prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC");
-$orders_stmt->bind_param("i", $user_id);
-$orders_stmt->execute();
-$orders_result = $orders_stmt->get_result();
+$stmt = $pdo->prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC");
+$stmt->execute([$user_id]);
+$orders_result = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="id">

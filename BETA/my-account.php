@@ -11,11 +11,9 @@ require_once 'config/database.php';
 
 $user_id = $_SESSION['user_id'];
 $query = "SELECT * FROM users WHERE id = ?";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
+$stmt = $pdo->prepare($query);
+$stmt->execute([$user_id]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Handle update profil
 $message = '';
@@ -51,30 +49,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // Update password jika diisi
     $password_sql = "";
+    $params = [$name, $email, $phone, $address, $city, $postal_code, $photo_path];
+    
     if (!empty($_POST['password'])) {
         $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-        $password_sql = ", password = '$password'";
+        $password_sql = ", password = ?";
+        $params[] = $password;
     }
+    
+    $params[] = $user_id;
     
     $update_query = "UPDATE users SET name = ?, email = ?, phone = ?, address = ?, city = ?, postal_code = ?, photo = ? $password_sql WHERE id = ?";
-    $stmt = $conn->prepare($update_query);
+    $stmt = $pdo->prepare($update_query);
+    $stmt->execute($params);
     
-    if (!empty($_POST['password'])) {
-        $stmt->bind_param("sssssssi", $name, $email, $phone, $address, $city, $postal_code, $photo_path, $user_id);
-    } else {
-        $stmt->bind_param("ssssssi", $name, $email, $phone, $address, $city, $postal_code, $photo_path, $user_id);
-    }
-    
-    if ($stmt->execute()) {
+    if ($stmt->rowCount() > 0 || empty($password_sql)) {
         $success = true;
         $message = 'Profil berhasil diperbarui!';
         // Refresh data user
         $query = "SELECT * FROM users WHERE id = ?";
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $user = $result->fetch_assoc();
+        $stmt = $pdo->prepare($query);
+        $stmt->execute([$user_id]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
     } else {
         $message = 'Gagal memperbarui profil. Silakan coba lagi.';
     }
@@ -99,10 +95,9 @@ $orders_query = "SELECT o.*,
                  FROM orders o 
                  WHERE o.user_id = ? 
                  ORDER BY o.created_at DESC";
-$orders_stmt = $conn->prepare($orders_query);
-$orders_stmt->bind_param("i", $user_id);
-$orders_stmt->execute();
-$orders = $orders_stmt->get_result();
+$orders_stmt = $pdo->prepare($orders_query);
+$orders_stmt->execute([$user_id]);
+$orders = $orders_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $page_title = 'Akun Saya - Core Stone Indonesia';
 include 'includes/header.php';
@@ -392,7 +387,7 @@ textarea {
             
             <h2 class="section-title" style="margin-top: 50px;">Riwayat Pesanan Terakhir</h2>
             
-            <?php if ($orders->num_rows > 0): ?>
+            <?php if (count($orders) > 0): ?>
                 <table class="orders-table">
                     <thead>
                         <tr>
@@ -404,7 +399,7 @@ textarea {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php while($order = $orders->fetch_assoc()): ?>
+                        <?php foreach($orders as $order): ?>
                             <tr>
                                 <td><strong><?php echo htmlspecialchars($order['order_number']); ?></strong></td>
                                 <td><?php echo date('d M Y, H:i', strtotime($order['created_at'])); ?></td>
@@ -418,7 +413,7 @@ textarea {
                                     <a href="order-detail.php?id=<?php echo $order['id']; ?>" class="order-link">Lihat Detail →</a>
                                 </td>
                             </tr>
-                        <?php endwhile; ?>
+                        <?php endforeach; ?>
                     </tbody>
                 </table>
             <?php else: ?>
